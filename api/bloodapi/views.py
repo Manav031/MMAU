@@ -80,6 +80,19 @@ def getBloodDetail(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 @authentication_classes([TokenAuthentication])
+def getBloodDetailid(request, id):
+    try:
+        data_blood = BloodRequirement.objects.filter(id=id)
+    except:
+        return Response({"error":"404 not found"}, status=HTTP_404_NOT_FOUND)
+
+    serializer = BloodRequirementSerializer(data_blood, many=True)
+    return Response({"data":serializer.data})
+    # return Response({"error":serializer.errors})
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
 def viewBloodDetail(request, id):
     try:
         data = BloodRequirement.objects.get(id=id)
@@ -136,13 +149,12 @@ def transferPoint(request, id):
         serializer1 = RewardPointSerializer(reward, data={"reward_point":(reward.reward_point-int(receive))})
         
         if serializer1.is_valid():
-            serializer1.save()
-            # print(serializer1.data['reward_point'])
             receiver_user = BloodRequirement.objects.get(id=id)
             recevier_profile = Profile.objects.get(user=receiver_user.user)
             rp = recevier_profile.reward_point
             if request.user == receiver_user.user:
                 return Response({"error":"you can not transfer to yourself"})
+            serializer1.save()
                 
             serializer2 = RewardPointSerializer(recevier_profile, data={"reward_point": (rp+int(receive))})
             if serializer2.is_valid():
